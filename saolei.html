@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style type="text/css">
+	body,ul,li{ margin: 0; padding: 0; }
+	li{ list-style: none; }
+	.box{ overflow: hidden; margin: 10px auto 0; padding: 3px 0 0 3px;}
+	.box li{ float: left; border:3px #000 double; margin: -3px 0 0 -3px; background: #ccc;}
+	.box .qi{ background: url(https://zhudong313.github.io/saolei/images/qi.jpg) no-repeat 0 0 / 100% 100%; }
+	.box .lei{ background: url(https://zhudong313.github.io/saolei/images/lei.jpg) no-repeat 0 0 / 100% 100%; }
+	.box .none{ background: #fff; text-align: center; font-weight: bold; color: red;}
+	</style>
+</head>
+<body oncontextmenu="return false;">
+	<script type="text/javascript">
+	var saoLei={
+		optionJSon:{//rows初始的行数，cols列数，leiNum雷数，liWH格子大小
+			rows:10,
+			cols:10,
+			leiNum:10,
+			liWH:30
+		},
+		ulNode:document.createElement("ul"),
+		arr:[],//记录数据
+		liNodes:[],//表示所有的li
+		createBoxFun:function(rows,cols,wh){//rows行数;cols列数;wh表示每个格子的宽(高)
+			var _this=this;
+			var frag=document.createDocumentFragment();
+			for(var i=0;i<rows;i++){
+				_this.arr[i]=[];
+				_this.liNodes[i]=[];
+				for(var j=0;j<cols;j++){
+					var liNode=document.createElement('li');
+					liNode.row=i;//记录格子的行
+					liNode.col=j;//记录格子的列
+					liNode.style.width=wh+"px";
+					liNode.style.height=wh+"px";
+					liNode.style.lineHeight=wh+"px";
+					_this.arr[i][j]='';
+					_this.liNodes[i][j]=liNode;
+					frag.appendChild(liNode);
+				}
+			};
+			_this.ulNode.style.width=((wh+3)*cols)+"px";
+			_this.ulNode.appendChild(frag);
+			document.body.appendChild(_this.ulNode);
+		},
+		leiFun:function(num){//雷随机出现位置;num表示出现几个雷
+			var _this=this;
+			var arr=[];//所有元素的位置
+			var allEls=_this.arr.length*_this.arr[0].length;
+			for(var i=0;i<allEls;i++){
+				arr.push(i);
+			}
+
+			var randomArr=[];//记录雷位置的数组
+			for(var j=0;j<num;j++){
+				var randomNum=Math.floor(Math.random()*arr.length);
+				randomArr.push(arr[randomNum]);
+				arr.splice(randomNum,1);
+			}
+			
+			for(var k=0;k<randomArr.length;k++){
+				//console.log(randomArr[k],_this.arr.length-1);
+				//一维数组转二位数组位置：row=一维数组位置除以(下舍)二位数组的列长度; col=一维数组位置取余二位数组的列长度
+				var row=Math.floor(randomArr[k]/(_this.arr[0].length));
+				var col=randomArr[k]%(_this.arr[0].length);
+				//console.log(row,col);
+				_this.arr[row][col]=false;//表示雷
+			}
+
+		},
+		leiNumFun:function(node){//递归,查周围的雷
+			//console.log(node.row,node.col);
+			var _this=this;
+			var row=node.row;
+			var col=node.col;
+			var num=0;//雷的个数
+			if(_this.arr[row][col]===false){//踩到雷
+				_this.liNodes[row][col].className='lei';
+				return;
+			}
+
+
+			for(var i=row-1;i<=row+1;i++){
+				for(var j=col-1;j<=col+1;j++){
+					if(i>=0 && j>=0){
+						if(_this.arr[i]!=null)
+						{
+							if(_this.arr[i][j]!=null)
+							{
+								if(_this.arr[i][j]===false){
+									num++;
+								}
+							}
+						}
+					}
+				}
+			}
+			//console.log(num);
+			if(num==0){//无雷
+				node.className='none';
+
+				for(var ii=row-1;ii<=row+1;ii++){
+					for(var jj=col-1;jj<=col+1;jj++){
+						if(ii>=0 && jj>=0){
+							if(_this.arr[ii]!=null){//保证格子位置是存在的
+								if(_this.arr[ii][jj]!=null)
+								{
+									if(_this.liNodes[ii][jj].className!='none'){//防止自己再次进入递归，形成死循环
+										console.log(ii,jj);
+										_this.leiNumFun(_this.liNodes[ii][jj]);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else{//有雷
+				node.className='none';
+				node.innerHTML=num;
+			}
+		},
+		mouseRightDownFun:function(e){
+			var _this=this;
+			var event=window.event || e;
+			var target=event.srcElement || event.target;
+			if(event.button==2){
+				if(target.nodeName.toLowerCase()=='li' && target.className!='none'  && target.className!='lei'){
+					if(target.className=='qi'){
+						target.className="";
+					}
+					else{
+						target.className="qi";
+					}
+				}
+			}
+		},
+		clickFun:function(e){
+			var _this=this;
+			var event=window.event || e;
+			var target=event.srcElement || event.target;
+			if(target.nodeName.toLowerCase()=='li'){
+				//console.log(target.row,target.col);
+				_this.leiNumFun(target);
+			}	
+		},
+		init:function(){
+			var _this=this;
+			_this.ulNode.className="box";
+
+			_this.createBoxFun(_this.optionJSon.rows,_this.optionJSon.cols,_this.optionJSon.liWH);//创建盒子
+
+			_this.leiFun(_this.optionJSon.leiNum);//随机10颗雷
+			
+			_this.ulNode.onclick=function(e){
+				_this.clickFun(e);
+			};
+
+			_this.ulNode.onmousedown=function(e){
+				_this.mouseRightDownFun(e);
+			};
+		}
+	};
+
+	saoLei.init();
+	</script>
+</body>
+</html>
