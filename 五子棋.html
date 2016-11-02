@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style>
+body,ul,li,div,i{ margin:0; padding:0;}
+body{ background:#cc7a52;}
+.chessman{ position:absolute; left:50%; margin-left:-650px; top:50px;}
+.black,.white{ position:absolute; left:50px; top:0; border-radius:50%; box-shadow:2px 2px 8px #000; width:30px; height:30px;}
+.black{
+	background: -webkit-radial-gradient(#999, #222, #000); /* Safari 5.1 - 6.0 */
+	background: -o-radial-gradient(#999, #222, #000); /* Opera 11.6 - 12.0 */
+	background: -moz-radial-gradient(#999, #222, #000); /* Firefox 3.6 - 15 */
+	background: radial-gradient(#999, #222, #000); /* 标准的语法 */
+}
+.white{
+	background: -webkit-radial-gradient(#ccc, #eee, #fff); /* Safari 5.1 - 6.0 */
+	background: -o-radial-gradient(#ccc, #eee, #fff); /* Opera 11.6 - 12.0 */
+	background: -moz-radial-gradient(#ccc, #eee, #fff); /* Firefox 3.6 - 15 */
+	background: radial-gradient(#ccc, #eee, #fff); /* 标准的语法 */
+}
+.current{ position:absolute; font-style:normal; font-size:30px; line-height:30px;}
+.start{ position:absolute; width:80px; left: 10px; top:180px; background:#000; color:#fff; text-align:center; line-height:30px; font-size: 16px; font-weight:bold; cursor:pointer; border-radius:5px;  font-style:normal;}
+#chessBox{ position:relative; width:1000px; margin:50px auto 0;}
+#chessBox ul{ overflow:hidden; width:100%; padding:0 3px 3px 0;}
+#chessBox li{ float:left; width:37px; height:37px; border:3px double #000; list-style:none; margin:0 -3px -3px 0;}
+</style>
+</head>
+
+<body>
+<div class="chessman">
+	<i id="current" class="current" style="top: 0px;">=》</i>
+	<i class="black" style=""></i>
+	<i class="white" style="top:80px;"></i>
+    <i class="start" onclick="window.location.reload();">重新开始</i>
+</div>
+
+<div id="chessBox">
+	<ul>
+
+    </ul>
+</div>
+<script>
+var chessObj={
+	chessBoxNode:document.querySelector("#chessBox"),
+	currentNode:document.querySelector("#current"),
+	boxWidth:40,//一个格子的宽度
+	chessWidth:30,//棋子的宽度
+	chessBool:true,//true表示落黑子，false落白子
+	chessArr:[],//记录数据的二维数组
+	nodeOffsetXXYY:function(node){
+		var arr=[];
+		var x=y=0;
+		x+=node.offsetLeft;
+		y+=node.offsetTop;
+		for(;true;){
+			node=node.offsetParent;
+			if(node.nodeName.toLowerCase()=="body"){
+				arr.push(x);
+				arr.push(y);
+				return arr;
+			}
+			else{
+				x+=node.offsetLeft;
+				y+=node.offsetTop;
+			}
+		}
+	},
+	liRowsFun:function(rows){//创建棋盘
+		var frag=document.createDocumentFragment();//碎片
+		var _this=this;
+		var cols=_this.chessBoxWidth/_this.boxWidth;
+		for(var col=0;col<=cols;col++){
+			_this.chessArr[col]=[];
+			for(var row=0;row<=rows;row++){
+				_this.chessArr[col][row]=false;//false表示现在无任何棋子
+				if(col!=cols && row!=rows)
+				{
+					var liNode=document.createElement('li');
+					frag.appendChild(liNode);
+				}
+			}
+		}
+		//console.log(_this.chessArr);
+		_this.chessBoxUlNode.appendChild(frag);
+	},
+	whoWinFun(x,y,color){//x,y表棋子坐标；color棋子的颜色
+		var _this=this;
+		
+		//横行判断;y不变
+		var num=0;
+		for(var i=x-4;i<=x+4;i++){
+			if(i>=0)
+			{
+				if(_this.chessArr[i][y]!=null && _this.chessArr[i][y]==color)
+				{
+					num+=1;
+					if(num>=5){
+						return alert(color+"赢了！")
+					}
+				}
+				else{
+					num=0;
+				}
+			}
+		}
+
+		
+
+		//垂直判断;x不变
+		num=0;
+		for(var i=y-4;i<=y+4;i++){
+			if(i>=0)
+			{
+				if(_this.chessArr[x][i]!=null && _this.chessArr[x][i]==color)
+				{
+					num+=1;
+					if(num>=5){
+						return alert(color+"赢了！")
+					}
+				}
+				else{
+					num=0;
+				}
+				//console.log(num,"--");
+			}
+		}
+		//console.log(num,"end");
+
+		
+
+		//斜的上到下
+		num=0;
+		for(var i=x-4,j=y-4;i<=x+4;i++,j++){
+			if(i>=0 && j>=0 )
+			{
+				if(_this.chessArr[i][j]!=null && _this.chessArr[i][j]==color)
+				{
+					num+=1;
+					if(num>=5){
+						return alert(color+"赢了！")
+					}
+				}
+				else{
+					num=0;
+				}
+			}
+		}
+		
+
+		//斜的下到上
+		num=0;
+		for(var i=x-4,j=y+4;i<=x+4;i++,j--){
+			if(i>=0 && j>=0 )
+			{
+				if(_this.chessArr[i][j]!=null && _this.chessArr[i][j]==color)
+				{
+					num+=1;
+					if(num>=5){
+						return alert(color+"赢了！")
+					}
+				}
+				else{
+					num=0;
+				}
+			}
+		}
+		
+	},
+	chessDownFun:function(e){
+		var _this=this;
+		var event=window.event || e;
+		var bodyNode=document.body;
+		var htmlNode=document.documentElement;
+		var mouseX=event.clientX+bodyNode.scrollLeft+htmlNode.scrollLeft;//鼠标与网页坐标x
+		var mouseY=event.clientY+bodyNode.scrollTop+htmlNode.scrollTop;//鼠标与网页坐标y
+
+		var chessXXYY=_this.nodeOffsetXXYY(_this.chessBoxNode);
+
+		var mouseChessX=mouseX-chessXXYY[0];//鼠标与棋盘的坐标x
+		var mouseChessY=mouseY-chessXXYY[1];//鼠标与棋盘的坐标y
+		//console.log(mouseChessX,mouseChessY,mouseY,chessXXYY[1]);
+		var x=Math.round(mouseChessX/_this.boxWidth);//放大40倍后坐标x
+		var y=Math.round(mouseChessY/_this.boxWidth);//放大40倍后坐标y
+
+		//console.log(x,y);
+		if(_this.chessArr[x][y]!=false){
+			return alert("此地已落子！");	
+		}
+		var span=document.createElement("span");
+		var color;
+		if(_this.chessBool){//黑子
+			span.className="black";
+			_this.chessBool=false;
+			_this.currentNode.style.top="80px";
+
+			color="black";
+		}
+		else//白子
+		{
+			span.className="white";
+			_this.chessBool=true;
+			_this.currentNode.style.top="0px";
+			color="white";
+		}
+
+		_this.chessArr[x][y]=color;
+		//console.log(span);
+		span.setAttribute("style","left:"+(x*40-_this.chessWidth/2)+"px;top:"+(y*40-_this.chessWidth/2)+"px");
+		_this.chessBoxNode.appendChild(span);
+
+		//console.log(_this.chessArr,x,y);
+		_this.whoWinFun(x,y,color)
+	},
+	init:function(){
+		var _this=this;
+		_this.chessBoxWidth=_this.chessBoxNode.clientWidth;//棋盘的宽度
+		_this.chessBoxUlNode=_this.chessBoxNode.querySelector('ul');
+
+		_this.liRowsFun(10);
+
+		_this.chessBoxNode.onclick=function(e){
+			_this.chessDownFun(e);
+		};
+
+	}
+};
+
+chessObj.init();
+</script>
+</body>
+</html>
